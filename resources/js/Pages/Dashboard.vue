@@ -61,6 +61,8 @@
         },
         methods: {
             startConversation(contact) {
+                this.updateReadMessage(contact, true)
+
                 axios.get(`conversation/${contact.id}`)
                     .then(response => {
                         this.messages = response.data
@@ -73,11 +75,27 @@
                 this.messages.push(message)
             },
             handleIncoming(message) {
+                //console.log(message)
                 if (this.selectContact && message.from === this.selectContact.id) {
                     this.newMessage(message)
                     return
                 }
-                alert(message.text)
+
+                this.updateReadMessage(message.from_user, false)
+            },
+            updateReadMessage(contact, reset) {
+                this.contacts = this.contacts.map((single) => {
+                    if (single.id !== contact.id) {
+                        return single
+                    }
+
+                    if (reset) {
+                        single.unread = 0
+                    } else {
+                        single.unread += 1
+                    }
+                    return single
+                })
             }
         }
     }

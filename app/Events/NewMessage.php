@@ -45,6 +45,8 @@ class NewMessage implements ShouldBroadcast
      */
     public function broadcastWith(): array
     {
+        $this->message->load('fromUser');
+
         return [
             'message' => $this->message
         ];

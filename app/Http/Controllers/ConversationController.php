@@ -15,13 +15,28 @@ class ConversationController extends Controller
     {
         $contacts = User::query()->where('id', '!=', auth()->id())->get();
 
+        $unreadMessages = Message::query()->selectRaw('`from` as sender_id, count(`from`) as message_count')
+            ->where('to', auth()->id())
+            ->where('read', false)
+            ->groupBy('from')->get();
+
+        $contacts = $contacts->map(function ($contact) use ($unreadMessages) {
+            $unreadContactMessages = $unreadMessages->where('sender_id', $contact->id)->first();
+
+            $contact->unread = $unreadContactMessages ? $unreadContactMessages->message_count : 0;
+
+            return $contact;
+        });
+
         return response()->json($contacts);
     }
 
     public function conversations($id): JsonResponse
     {
-//        $messages = Message::query()->where('from', $id)
-//            ->orWhere('to', $id)->get();
+        Message::query()->where('from', $id)
+            ->where('to', auth()->id())->update([
+                'read' => true
+            ]);
 
         $messages = Message::query()->where(function (Builder $builder) use ($id) {
             $builder->where('from', auth()->id())
